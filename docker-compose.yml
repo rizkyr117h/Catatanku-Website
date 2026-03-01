@@ -1,32 +1,8 @@
 services:
-
-  db:
-    image: postgres:16-alpine
-    restart: unless-stopped
-    environment:
-      POSTGRES_DB:       ${POSTGRES_DB}
-      POSTGRES_USER:     ${POSTGRES_USER}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER}"]
-      interval: 10s
-      retries: 5
-
   app:
     build: .
     restart: unless-stopped
     ports:
-      - "4502:8000"     # akses via http://server-ip:4502
-    environment:
-      DATABASE_URL:    postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}
-      SECRET_KEY:      ${SECRET_KEY}
-      JWT_SECRET_KEY:  ${JWT_SECRET_KEY}
-      ALLOWED_ORIGINS: "*"
-    depends_on:
-      db:
-        condition: service_healthy
-
-volumes:
-  postgres_data:
+      - "4502:8000"
+    volumes:
+      - ./data:/app/instance   # database SQLite disimpan di folder data/
