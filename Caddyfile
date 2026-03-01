@@ -1,0 +1,21 @@
+catatanku.rizkytech.cloud {
+    # SSL otomatis dari Let's Encrypt — tidak perlu setup manual!
+
+    # Frontend (file HTML statis)
+    root * /srv
+    file_server
+
+    # API → Flask
+    reverse_proxy /api/* app:8000
+
+    # Kompres response
+    encode gzip
+
+    # Security headers
+    header {
+        X-Content-Type-Options "nosniff"
+        X-Frame-Options "DENY"
+        Referrer-Policy "strict-origin-when-cross-origin"
+        -Server
+    }
+}
