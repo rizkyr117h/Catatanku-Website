@@ -17,32 +17,16 @@ services:
   app:
     build: .
     restart: unless-stopped
+    ports:
+      - "4502:8000"     # akses via http://server-ip:4502
     environment:
-      DATABASE_URL:   postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}
-      SECRET_KEY:     ${SECRET_KEY}
-      JWT_SECRET_KEY: ${JWT_SECRET_KEY}
-      ALLOWED_ORIGINS: ${ALLOWED_ORIGINS}
+      DATABASE_URL:    postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}
+      SECRET_KEY:      ${SECRET_KEY}
+      JWT_SECRET_KEY:  ${JWT_SECRET_KEY}
+      ALLOWED_ORIGINS: "*"
     depends_on:
       db:
         condition: service_healthy
 
-  caddy:
-    image: caddy:2-alpine
-    restart: unless-stopped
-    ports:
-      - "80:80"
-      - "443:443"
-      - "443:443/udp"
-    volumes:
-      - ./Caddyfile:/etc/caddy/Caddyfile:ro
-      - ./static:/srv:ro              # frontend HTML
-      - caddy_data:/data              # cert disimpan otomatis di sini
-      - caddy_config:/config
-    depends_on:
-      - app
-
-
 volumes:
   postgres_data:
-  caddy_data:
-  caddy_config:

@@ -1,93 +1,55 @@
-# Catatanku — Deploy Guide (Simpel)
+# Catatanku — Development Setup
 
-## Struktur
+## Jalankan
+
+```bash
+# 1. Clone / upload project ke server
+cd ~/catatanku
+
+# 2. Sesuaikan .env jika perlu (sudah ada default untuk dev)
+nano .env
+
+# 3. Build dan jalankan
+docker compose up -d
+
+# 4. Cek
+curl http://localhost:4502/api/health
 ```
-catatanku/
-├── app/
-│   ├── __init__.py
-│   ├── models.py
-│   └── routes/
-│       ├── auth.py
-│       ├── notes.py
-│       └── tags.py
-├── static/
-│   └── index.html        ← taruh file catatan-pribadi.html di sini
-├── wsgi.py
-├── requirements.txt
-├── Dockerfile
-├── Caddyfile             ← SSL otomatis, tanpa ribet
-├── docker-compose.yml
-└── .env
-```
+
+App berjalan di **http://server-ip:4502**
 
 ---
 
-## Deploy (5 langkah)
+## Setup Nginx Manual (opsional)
 
-### 1. Upload project ke server
 ```bash
-scp -r catatanku-simple/ user@server:~/catatanku
-cd ~/catatanku
+# Copy config
+sudo cp nginx.conf.example /etc/nginx/sites-available/catatanku
+sudo ln -s /etc/nginx/sites-available/catatanku /etc/nginx/sites-enabled/
+
+# Taruh file frontend
+sudo mkdir -p /var/www/catatanku
+sudo cp catatan-pribadi.html /var/www/catatanku/index.html
+
+# Test dan reload
+sudo nginx -t && sudo systemctl reload nginx
 ```
 
-### 2. Buat file .env
+## Setup SSL Manual (setelah Nginx jalan)
+
 ```bash
-cp .env.example .env
-nano .env   # isi nilai-nilainya
+sudo certbot --nginx -d catatanku.rizkytech.cloud
 ```
 
-Generate secret key:
-```bash
-python3 -c "import secrets; print(secrets.token_hex(32))"
-```
-
-### 3. Taruh file frontend
-```bash
-mkdir -p static
-cp /path/to/catatan-pribadi.html static/index.html
-```
-
-### 4. Jalankan
-```bash
-docker compose up -d
-```
-
-Selesai! Caddy otomatis mengurus SSL Let's Encrypt. Tidak perlu setup cert manual.
-
-### 5. Cek status
-```bash
-docker compose ps
-curl https://catatanku.rizkytech.cloud/api/health
-```
+Certbot akan otomatis update config Nginx untuk HTTPS.
 
 ---
 
 ## Perintah berguna
+
 ```bash
-# Lihat log
-docker compose logs -f
-
-# Restart
-docker compose restart
-
-# Update app
-docker compose build app && docker compose up -d --no-deps app
-
-# Masuk ke database
-docker compose exec db psql -U catatanku_user -d catatanku
+docker compose logs -f        # lihat log
+docker compose restart app    # restart flask
+docker compose down           # matikan semua
+docker compose up -d --build  # rebuild dan jalankan
 ```
-
-## API Endpoints
-
-| Method | URL | Keterangan |
-|--------|-----|------------|
-| POST | `/api/auth/register` | Daftar |
-| POST | `/api/auth/login` | Login |
-| POST | `/api/auth/refresh` | Refresh token |
-| GET  | `/api/auth/me` | Info user |
-| GET  | `/api/notes/` | List catatan |
-| POST | `/api/notes/` | Buat catatan |
-| PUT  | `/api/notes/<id>` | Update catatan |
-| DELETE | `/api/notes/<id>` | Hapus permanen |
-| GET  | `/api/tags/` | List tag |
-| POST | `/api/tags/` | Buat tag |
